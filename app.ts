@@ -5,7 +5,7 @@ import {fileURLToPath} from "url"
 const app = express()
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const frontendDistPath = path.join(__dirname, "./client/dist");
+const frontendDistPath = path.join(__dirname, "../client/dist");
 app.use(express.static(frontendDistPath));
 
 app.get("/", (req, res) => {
