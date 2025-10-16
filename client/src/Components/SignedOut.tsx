@@ -1,49 +1,88 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
+import { Button, Group, TextInput } from "@mantine/core";
+import { useForm } from "@mantine/form";
 
 interface Props {
   setUser: React.Dispatch<any>;
 }
 function SignedIn({ setUser }: Props) {
-  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const form = useForm({
+    mode: "uncontrolled",
+    initialValues: {
+      email: "",
+      password: "",
+    },
+
+    validate: {
+      email: (value) => {
+        if (!value) return "Email is required.";
+        return /^\S+@\S+$/.test(value) ? null : "Invalid email.";
+      },
+      password: (value) => {
+        if (!value) return "Password is required.";
+      },
+    },
+  });
   return (
     <>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const email = (
-            e.currentTarget.elements.namedItem("email") as HTMLInputElement
-          ).value;
-          const password = (
-            e.currentTarget.elements.namedItem("password") as HTMLInputElement
-          ).value;
-          if (!email) {
-            setError("Please provide a valid password");
+        onSubmit={form.onSubmit((values) => {
+          if (!values.email) {
+            form.setErrors({ email: "Email is Required." });
+            setLoading(false);
+            return;
           }
-          if (!password) {
-            setError("Please Provide a Valid Password");
+          if (!values.password) {
+            form.setErrors({ password: "Password is Required." });
+            setLoading(false);
+            return;
           }
+          setLoading(true);
           supabase.auth
             .signInWithPassword({
-              email,
-              password,
+              email: values.email,
+              password: values.password,
             })
             .then((e) => {
               if (e.error) {
-                setError(e.error.message);
+                form.setErrors({ password: e.error.message });
               }
+              setLoading(false);
               setUser(e.data.session?.user);
             })
             .catch((e) => {
               console.log(e);
-              setError(e.error.message);
+              setLoading(false);
+              form.setErrors({ password: e.error.message });
             });
-        }}
+        })}
       >
-        <input type="email" name="email" id="email" />
-        <input type="password" name="password" id="password" />
-        <button type="submit"></button>
-        {error ? <p>{error}</p> : null}
+        <TextInput
+          withAsterisk
+          label="Email"
+          placeholder="your@email.com"
+          key={form.key("email")}
+          {...form.getInputProps("email")}
+        />
+        <TextInput
+          withAsterisk
+          label="Password"
+          type="password"
+          placeholder="ABCabc123@#&"
+          key={form.key("password")}
+          {...form.getInputProps("password")}
+        />
+        <Group justify="flex-end" mt="md">
+          {loading ? (
+            <Button loading type="submit">
+              Sign In
+            </Button>
+          ) : (
+            <Button type="submit">Sign In</Button>
+          )}
+        </Group>
       </form>
     </>
   );
