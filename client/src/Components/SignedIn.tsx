@@ -115,6 +115,7 @@ function SignedIn() {
         >
           Sign Out
         </Button>
+        <InstallPWAButton />
       </div>
     </>
   );
