@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Button, Tabs } from "@mantine/core";
 import { socket } from "../socket";
+import Participants from "./Participants";
 
 function SignedIn() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -100,7 +101,9 @@ function SignedIn() {
               style={{ width: "640px", height: "480px" }}
             />
           </Tabs.Panel>
-          <Tabs.Panel value="participants">Participants</Tabs.Panel>
+          <Tabs.Panel value="participants">
+            <Participants />
+          </Tabs.Panel>
         </Tabs>
         <Button
           loading={loading}

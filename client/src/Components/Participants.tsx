@@ -52,15 +52,50 @@ function Participants() {
       >
         <TextInput
           withAsterisk
+          label="Name"
+          placeholder="Elon Musk"
+          key={form.key("name")}
+          {...form.getInputProps("name")}
+        />
+        <TextInput
+          withAsterisk
+          label="Phone"
+          placeholder="01234-567890"
+          key={form.key("phone")}
+          {...form.getInputProps("phone")}
+        />
+        <TextInput
+          withAsterisk
           label="Email"
           placeholder="your@email.com"
           key={form.key("email")}
           {...form.getInputProps("email")}
         />
+        <TextInput
+          withAsterisk
+          label="Instutitions"
+          placeholder="XYZ School and College"
+          key={form.key("institution")}
+          {...form.getInputProps("institution")}
+        />
+        <TextInput
+          withAsterisk
+          label="Grade"
+          placeholder="Class 11"
+          key={form.key("grade")}
+          {...form.getInputProps("grade")}
+        />
+        <TextInput
+          withAsterisk
+          label="Emergency Contact"
+          placeholder="01234-567890"
+          key={form.key("emergencyContact")}
+          {...form.getInputProps("emergencyContact")}
+        />
 
         <Group justify="flex-end" mt="md">
           <Button loading={loading} type="submit">
-            Sign In
+            Add Participant
           </Button>
         </Group>
       </form>
