@@ -1,12 +1,11 @@
 import { BrowserMultiFormatReader } from "@zxing/library";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { Button, Tabs } from "@mantine/core";
 
-interface Props {
-  setUser: React.Dispatch<any>;
-}
-
-function SignedIn({ setUser }: Props) {
+function SignedIn() {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string | null>("scanner");
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
   useEffect(() => {
@@ -51,10 +50,6 @@ function SignedIn({ setUser }: Props) {
                 console.log("Barcode detected:", result.getText());
                 handleBarcode(result.getText());
               }
-              // Ignore NotFoundException
-              // if (err && err.name !== "NotFoundException") {
-              //   console.error("ZXing error:", err);
-              // }
             }
           );
         }
@@ -100,22 +95,32 @@ function SignedIn({ setUser }: Props) {
   return (
     <>
       <div className="flex justify-center items-center h-screen bg-gray-100">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="rounded shadow-lg"
-          style={{ width: "640px", height: "480px" }}
-        />
-        <button
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Tab value="scanner">Scanner</Tabs.Tab>
+            <Tabs.Tab value="participants">Participants</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="scanner">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="rounded shadow-lg"
+              style={{ width: "640px", height: "480px" }}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value="participants">Participants</Tabs.Panel>
+        </Tabs>
+        <Button
+          loading={loading}
           onClick={(e) => {
             e.preventDefault();
+            setLoading(true);
             supabase.auth.signOut();
-            setUser(null);
           }}
         >
           Sign Out
-        </button>
+        </Button>
       </div>
     </>
   );

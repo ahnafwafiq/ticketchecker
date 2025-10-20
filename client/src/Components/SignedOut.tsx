@@ -1,27 +1,39 @@
 import { useState } from "react";
-import { supabase } from "../supabaseClient";
 import { Button, Group, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
-interface Props {
-  setUser: React.Dispatch<any>;
-}
-function SignedIn({ setUser }: Props) {
+function SignedIn() {
   const [loading, setLoading] = useState<boolean>(false);
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
+      name: "",
+      phone: "",
       email: "",
-      password: "",
+      institution: "",
+      grade: "",
+      emergencyContact: "",
     },
 
     validate: {
+      name: (value) => {
+        if (!value) return "Name is required.";
+      },
+      phone: (value) => {
+        if (!value) return "Phone is required.";
+      },
       email: (value) => {
         if (!value) return "Email is required.";
         return /^\S+@\S+$/.test(value) ? null : "Invalid email.";
       },
-      password: (value) => {
-        if (!value) return "Password is required.";
+      institution: (value) => {
+        if (!value) return "Instituion Name is required.";
+      },
+      grade: (value) => {
+        if (!value) return "Grade is required.";
+      },
+      emergencyContact: (value) => {
+        if (!value) return "Emergency contact number is required.";
       },
     },
   });
@@ -34,29 +46,8 @@ function SignedIn({ setUser }: Props) {
             setLoading(false);
             return;
           }
-          if (!values.password) {
-            form.setErrors({ password: "Password is Required." });
-            setLoading(false);
-            return;
-          }
+
           setLoading(true);
-          supabase.auth
-            .signInWithPassword({
-              email: values.email,
-              password: values.password,
-            })
-            .then((e) => {
-              if (e.error) {
-                form.setErrors({ password: e.error.message });
-              }
-              setLoading(false);
-              setUser(e.data.session?.user);
-            })
-            .catch((e) => {
-              console.log(e);
-              setLoading(false);
-              form.setErrors({ password: e.error.message });
-            });
         })}
       >
         <TextInput
@@ -66,22 +57,11 @@ function SignedIn({ setUser }: Props) {
           key={form.key("email")}
           {...form.getInputProps("email")}
         />
-        <TextInput
-          withAsterisk
-          label="Password"
-          type="password"
-          placeholder="ABCabc123@#&"
-          key={form.key("password")}
-          {...form.getInputProps("password")}
-        />
+
         <Group justify="flex-end" mt="md">
-          {loading ? (
-            <Button loading type="submit">
-              Sign In
-            </Button>
-          ) : (
-            <Button type="submit">Sign In</Button>
-          )}
+          <Button loading={loading} type="submit">
+            Sign In
+          </Button>
         </Group>
       </form>
     </>

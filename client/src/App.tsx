@@ -43,11 +43,7 @@ function App() {
   return (
     <>
       <MantineProvider>
-        {session ? (
-          <SignedIn setUser={setSession} />
-        ) : (
-          <SignedOut setUser={setSession} />
-        )}
+        {session ? <SignedIn /> : <SignedOut />}
       </MantineProvider>
     </>
   );

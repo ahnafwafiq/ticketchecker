@@ -25,4 +25,5 @@ model Participant {
   grade             String
   emergencyContact  String
   createdAt         DateTime @default(now())
+  createdBy         String
 }
