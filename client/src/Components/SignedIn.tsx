@@ -2,6 +2,7 @@ import { BrowserMultiFormatReader } from "@zxing/library";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Button, Tabs } from "@mantine/core";
+import { socket } from "../socket";
 
 function SignedIn() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -9,6 +10,10 @@ function SignedIn() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
   useEffect(() => {
+    // Web Socket connection
+    socket.on("connect", () => {
+      console.log("Web Socket Connected ✅");
+    });
     const startCamera = async () => {
       try {
         codeReader.current = new BrowserMultiFormatReader();
@@ -70,25 +75,11 @@ function SignedIn() {
     };
   }, []);
   const handleBarcode = async (barcodeData: string) => {
-    try {
-      console.log("Barcode detected:", barcodeData);
+    // console.log("Barcode detected:", barcodeData);
 
-      // Send GET request to backend
-      const response = await fetch(
-        `/api/get-participant?barcode=${encodeURIComponent(barcodeData)}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("Participant data:", data);
-
-      // 🔥 Do something with the data, e.g., show on UI
-      alert(`Participant: ${data.name} | Status: ${data.status}`);
-    } catch (err) {
-      console.error("Error fetching participant:", err);
+    // Send barcode to backend
+    if (barcodeData.length === 8) {
+      socket.emit("barcode_detected", barcodeData);
     }
   };
 
