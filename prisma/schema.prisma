@@ -18,7 +18,7 @@ model Participant {
   id                Int      @id @default(autoincrement())
   uid               String   @unique @default(dbgenerated("substr(md5(random()::text), 1, 8)")) // 8-char unique ID
   name              String
-  email             String   @unique
+  email             String
   phone             String
   institution       String
   grade             String

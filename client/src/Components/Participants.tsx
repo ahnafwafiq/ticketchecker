@@ -8,6 +8,8 @@ import { MdContactEmergency, MdDelete } from "react-icons/md";
 function Participants() {
   const [loading, setLoading] = useState<boolean>(false);
   const [participants, setParticipants] = useState<any[]>([]);
+
+  // Handles successful creation of new participant
   const handleCreationSuccess = (data: {
     id: number;
     uid: string;
@@ -23,10 +25,19 @@ function Participants() {
     setParticipants((prev) => [...prev, data]);
     setLoading(false);
   };
+
+  // Handles response to participant query request
   const handleQueryResult = (data: any[]) => {
     setParticipants(data);
   };
+
+  // Handles successful deletion of participant
+  const handleDeleteParticipant = (data: { uid?: string }) => {
+    if (!data?.uid) return;
+    setParticipants((prev) => prev.filter((p) => p.uid !== data.uid));
+  };
   useEffect(() => {
+    socket.on("deleteSuccess", handleDeleteParticipant);
     socket.on(`creationSuccess`, handleCreationSuccess);
     socket.on("queryResult", handleQueryResult);
     supabase.auth.getSession().then((session) => {
@@ -37,6 +48,7 @@ function Participants() {
     return () => {
       socket.off("creationSuccess", handleCreationSuccess);
       socket.off("queryResult", handleQueryResult);
+      socket.off("deleteSuccess", handleDeleteParticipant);
     };
   }, []);
   const form = useForm({
@@ -93,7 +105,6 @@ function Participants() {
           onClick={() =>
             socket.emit("deleteParticipant", {
               uid: row.uid,
-              createdBy: row.createdBy,
             })
           }
         />
@@ -173,7 +184,8 @@ function Participants() {
             <Table.Th>Phone</Table.Th>
             <Table.Th>Institution</Table.Th>
             <Table.Th>Grade</Table.Th>
-            <Table.Th>Emergency Contact</Table.Th>
+            <Table.Th></Table.Th>
+            <Table.Th></Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{tableRows}</Table.Tbody>

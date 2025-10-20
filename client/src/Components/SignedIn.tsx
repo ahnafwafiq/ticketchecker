@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { Button, Tabs } from "@mantine/core";
 import { socket } from "../socket";
 import Participants from "./Participants";
+import InstallPWAButton from "./InstallPWAButton";
 
 function SignedIn() {
   const [loading, setLoading] = useState<boolean>(false);

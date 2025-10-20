@@ -38,9 +38,14 @@ io.on("connection", (socket) => {
         } else {
           socket.emit(`creationFailed`);
         }
+      })
+      .catch((e) => {
+        socket.emit("creationFailed", e);
+        console.log(e);
       });
   });
 
+  // Responds to Participants Query
   socket.on("participantsQuery", (data) => {
     db.participant
       .findMany({
@@ -52,8 +57,28 @@ io.on("connection", (socket) => {
         socket.emit("queryResult", res);
       })
       .catch((e) => {
-        socket.emit("queryFailed", { e });
+        console.log(e);
+        socket.emit("queryFailed", e);
       });
+  });
+
+  // Responds to participant delete request
+  socket.on("deleteParticipant", (data) => {
+    try {
+      db.participant
+        .delete({
+          where: {
+            uid: data.uid,
+          },
+        })
+        .then(() => {
+          socket.emit("deleteSuccess", {
+            uid: data.uid,
+          });
+        });
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   socket.on("disconnect", () => {
