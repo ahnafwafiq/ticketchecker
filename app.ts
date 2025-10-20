@@ -3,7 +3,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
 import { Server } from "socket.io";
+import { PrismaClient } from "@prisma/client";
 
+const db = new PrismaClient();
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,16 +13,47 @@ const frontendDistPath = path.join(__dirname, "../client/dist");
 app.use(express.static(frontendDistPath));
 
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
 
 // Web Socket Code
 io.on("connection", (socket) => {
   console.log("⚡ New client connected:", socket.id);
 
-  socket.on("message", (data) => {
-    console.log("📩 Received message:", data);
-    // Broadcast to all connected clients
-    io.emit("message", data);
+  // Add participant on form submission
+  socket.on("addParticipant", (data) => {
+    db.participant
+      .create({
+        data: {
+          ...data,
+        },
+      })
+      .then((res) => {
+        if (res) {
+          socket.emit(`creationSuccess`, res);
+        } else {
+          socket.emit(`creationFailed`);
+        }
+      });
+  });
+
+  socket.on("participantsQuery", (data) => {
+    db.participant
+      .findMany({
+        where: {
+          createdBy: data.admin,
+        },
+      })
+      .then((res) => {
+        socket.emit("queryResult", res);
+      })
+      .catch((e) => {
+        socket.emit("queryFailed", { e });
+      });
   });
 
   socket.on("disconnect", () => {
@@ -45,6 +78,6 @@ app.get("/api/get-participant", (req, res) => {
   res.json(participant);
 });
 
-app.listen(8080, "0.0.0.0", () => {
+server.listen(8080, "0.0.0.0", () => {
   console.log("App started on port 8080");
 });

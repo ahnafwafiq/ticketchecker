@@ -1,9 +1,44 @@
-import { useState } from "react";
-import { Button, Group, TextInput } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { Button, Group, Table, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { socket } from "../socket";
+import { supabase } from "../supabaseClient";
+import { MdContactEmergency, MdDelete } from "react-icons/md";
 
 function Participants() {
   const [loading, setLoading] = useState<boolean>(false);
+  const [participants, setParticipants] = useState<any[]>([]);
+  const handleCreationSuccess = (data: {
+    id: number;
+    uid: string;
+    name: string;
+    email: string;
+    phone: string;
+    institution: string;
+    grade: string;
+    emergencyContact: string;
+    createdAt: Date;
+    createdBy: string;
+  }) => {
+    setParticipants((prev) => [...prev, data]);
+    setLoading(false);
+  };
+  const handleQueryResult = (data: any[]) => {
+    setParticipants(data);
+  };
+  useEffect(() => {
+    socket.on(`creationSuccess`, handleCreationSuccess);
+    socket.on("queryResult", handleQueryResult);
+    supabase.auth.getSession().then((session) => {
+      socket.emit(`participantsQuery`, {
+        admin: session.data.session?.user.id,
+      });
+    });
+    return () => {
+      socket.off("creationSuccess", handleCreationSuccess);
+      socket.off("queryResult", handleQueryResult);
+    };
+  }, []);
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -37,17 +72,47 @@ function Participants() {
       },
     },
   });
+
+  const tableRows = participants.map((row) => (
+    <Table.Tr key={row.uid}>
+      <Table.Td>{row.uid}</Table.Td>
+      <Table.Td>{row.name}</Table.Td>
+      <Table.Td>{row.email}</Table.Td>
+      <Table.Td>{row.phone}</Table.Td>
+      <Table.Td>{row.institution}</Table.Td>
+      <Table.Td>{row.grade}</Table.Td>
+      <Table.Td>
+        <MdContactEmergency
+          onClick={() =>
+            window.alert(`Emergency Contact: ${row.emergencyContact}`)
+          }
+        />
+      </Table.Td>
+      <Table.Td>
+        <MdDelete
+          onClick={() =>
+            socket.emit("deleteParticipant", {
+              uid: row.uid,
+              createdBy: row.createdBy,
+            })
+          }
+        />
+      </Table.Td>
+    </Table.Tr>
+  ));
+
   return (
     <>
       <form
-        onSubmit={form.onSubmit((values) => {
-          if (!values.email) {
-            form.setErrors({ email: "Email is Required." });
-            setLoading(false);
-            return;
-          }
-
+        onSubmit={form.onSubmit(async (values) => {
           setLoading(true);
+          const session = await supabase.auth.getSession();
+          if (session.data.session) {
+            socket.emit("addParticipant", {
+              ...values,
+              createdBy: session.data.session?.user.id,
+            });
+          }
         })}
       >
         <TextInput
@@ -99,6 +164,20 @@ function Participants() {
           </Button>
         </Group>
       </form>
+      <Table>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>ID</Table.Th>
+            <Table.Th>Name</Table.Th>
+            <Table.Th>Email</Table.Th>
+            <Table.Th>Phone</Table.Th>
+            <Table.Th>Institution</Table.Th>
+            <Table.Th>Grade</Table.Th>
+            <Table.Th>Emergency Contact</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>{tableRows}</Table.Tbody>
+      </Table>
     </>
   );
 }
